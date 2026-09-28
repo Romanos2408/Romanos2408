@@ -1,9 +1,9 @@
 # Stylianos Romanopoulos
 
-A PhD in physics taught me to find the signal in messy data and see the work through. As the only data person at a 400,000-user app, I built its analytics warehouse from scratch and co-built a fraud-scoring model that went into the product. Hand me an open-ended problem and I will teach myself whatever it takes to turn it into a clean, working solution. Now I am in pursuit of an international career in data science, machine learning and AI.
+A PhD in physics taught me to find the signal in messy data. As the only data person at a 400,000-user app, I built its analytics warehouse and co-built a fraud-scoring model that went into the product; for a small business, my pricing and purchasing changes tripled its net income. Hand me an open-ended problem and I will teach myself whatever it takes to turn it into a clean, working solution. I am in pursuit of an international career in data science, machine learning and AI, building models that change how companies run.
 
 - **Now:** freelance data work for small businesses in Crete. Open to data science roles, remote or on site.
-- **Research:** PhD in astroparticle physics, 14 publications, one in *Nature Astronomy*.
+- **Research:** PhD in astroparticle physics; 13 publications and the thesis, one in *Nature Astronomy*.
 
 **How:** Python and SQL on PostgreSQL for the data, statistics and Bayesian inference for the analysis, FastAPI and React for the dashboards and apps.
 

@@ -10,12 +10,17 @@ A PNG with a transparent background also works; the build keeps the transparency
 
 | File | What to shoot | Shape |
 |---|---|---|
-| `giorgos.jpg` | Him smiling, holding a handpiece or a screwdriver, in a clinic. Relaxed, not posed. | Tall (portrait) |
+| `giorgos.jpg` | Him smiling, holding a handpiece or a screwdriver, in a clinic. Relaxed, not posed. | Square |
 | `giorgos-2.jpg` | Him at work: under a dental chair, or opening up a unit. Hands and tools visible. | Square |
-| `giorgos-3.jpg` | Something fun: at the Skinakas telescope, in his car loaded with parts, or a funny moment with a dentist. | Square |
-| `hero.jpg` | The best shot of the set. Him next to a dental chair he just fixed, or a clean shot of a chair. | Tall (portrait) |
+| `giorgos-3.jpg` | At the Skinakas telescope (caption: «Σκίνακας, 3 τα ξημερώματα»). | Square |
+| `giorgos-4.jpg` | His car loaded with parts and tools (caption: «Το γραφείο μου»). | Square |
+| `hero.jpg` | The best shot: him at or under a dental chair (caption: «Συνήθως κάτω από μια έδρα»). | Square |
 
-## Service photos (free stock photos are fine here)
+## Optional props (PNG with the background removed)
+
+Cut-out objects that sit directly on the marble bench, such as his Dymo label printer, a handpiece, a coffee cup or a screwdriver. Name them `prop-1.png`, `prop-2.png` and so on, and they can be placed around the page.
+
+## Service photos (not used in the current design; keep for later)
 
 | File | Shows | Free photo to start with |
 |---|---|---|

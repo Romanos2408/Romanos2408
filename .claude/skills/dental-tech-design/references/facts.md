@@ -1,0 +1,25 @@
+# Facts you can use (from the original site and the user)
+
+- **Business:** Υποστήριξη Οδοντιατρείου, www.dental-tech.gr, Heraklion, Crete. Business-to-business: it serves dentists, not patients.
+- **Person:** Γιώργος Πατεράκης. Physics graduate from the University of Crete. Formerly technical lead in hydroacoustics at the Institute of Marine Biology of Crete. Now technical lead at Skinakas Observatory.
+- **Personality (from the user):** friendly, funny, helps everyone, always running around. Available literally 24/7.
+- **His own words:** «Δεν ενοχλείτε, να καλείτε οποτεδήποτε.» «Χαρά μας να σας εξυπηρετούμε.»
+- **Phone/Viber:** 6944 648 748 (tel:+306944648748, viber://chat?number=%2B306944648748)
+- **Email:** tech@dental-tech.gr
+- **Trained by:** KAVO, Sirona-Siemens, Technomedica, Neodent, Flex, Dentofair, Sadent (ADEC, Belmont). **Works with:** ANTHOS, Stern Weber, Castellini. Lots of experience with Chinese units.
+- **Services:**
+  - dental chairs and units: service, repair, refurbishing (upholstery, paint, new instrument table)
+  - handpieces: German rotors with ceramic bearings, 9-12 month warranty, a loaner while yours is repaired
+  - autoclaves and pouch sealers: repaired on site, loaner sealer
+  - digital X-ray: helps choose a system, installs it, repairs sensors, retrofits old units with new timers
+  - new equipment and lasers
+  - clinic design (ergonomic, FlexDental underfloor infrastructure) and moving a clinic
+  - computers: backup up to 3 times a day, dental software, lessons
+- **Promises:**
+  - free damage assessment
+  - free loaner compressor, handpieces and syringe during repairs
+  - remote help by video call, free
+  - parts shipped anywhere
+- **KAVO offer** (1057, Primus 1058, Estetica 1060, E30, E50): labour up to €280, parts up to €120, without VAT. Other repairs are 25% off the price list.
+- **2013:** partly sponsored the building of the Heraklion Social Dental Clinic.
+- **Unknown, so don't invent:** years in business, number of clients, reviews, address, legal name.

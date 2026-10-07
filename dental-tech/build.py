@@ -119,9 +119,9 @@ def head(title, description, canonical, extra=""):
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(description)}">
 <meta property="og:url" content="{canonical}">
-<meta name="theme-color" content="#f6f5f1">
+<meta name="theme-color" content="#f5f4f0">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="assets/fonts/noto-serif-display-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/sofia-sans-extra-condensed-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/style.css">{extra}"""
 
 

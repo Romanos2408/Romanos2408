@@ -1,27 +1,26 @@
 (function () {
-  var doc = document.documentElement;
-  if (!doc.lang) doc.lang = "el";
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Dymo headline: letters appear one by one, like the label maker clicking.
-  if (!reduceMotion) {
-    document.querySelectorAll(".typing").forEach(function (el) {
-      var text = el.textContent;
-      var start = parseInt((el.style.getPropertyValue("--d") || "0").replace("ms", ""), 10) || 0;
-      el.setAttribute("aria-label", text);
-      el.textContent = "";
-      Array.prototype.forEach.call(text, function (c, i) {
-        var s = document.createElement("span");
-        s.className = "ch";
-        s.setAttribute("aria-hidden", "true");
-        s.textContent = c;
-        el.appendChild(s);
-        setTimeout(function () { s.classList.add("on"); }, start + 250 + i * 70);
-      });
+  // Mobile menu
+  var btn = document.querySelector(".menu-btn");
+  var nav = document.getElementById("nav");
+  if (btn && nav) {
+    btn.addEventListener("click", function () {
+      var open = nav.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && nav.classList.contains("open")) { nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); btn.focus(); }
     });
   }
 
-  // Hide the phone call strip while another call button is on screen.
+  // Header line once the page scrolls
+  var header = document.querySelector(".site-header");
+  function onScroll() { if (header) header.classList.toggle("scrolled", window.scrollY > 8); }
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  // Hide the phone call bar while another call button is on screen
   var callbar = document.querySelector(".callbar");
   var spots = document.querySelectorAll("[data-hide-callbar]");
   if (callbar && spots.length && "IntersectionObserver" in window) {
@@ -33,7 +32,7 @@
     spots.forEach(function (el) { io.observe(el); });
   }
 
-  // Depth: things closer to you move a little faster than the counter.
+  // Gentle parallax on the hero photo
   var layers = Array.prototype.slice.call(document.querySelectorAll("[data-speed]"));
   if (layers.length && !reduceMotion) {
     var ticking = false;
@@ -52,11 +51,11 @@
     window.addEventListener("resize", paint);
   }
 
-  // Objects below the first screen settle onto the bench as you reach them.
+  // Sections below the first screen fade up as they scroll in
   if (!reduceMotion && "IntersectionObserver" in window) {
     var ro = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.remove("pending"); ro.unobserve(e.target); } });
-    }, { rootMargin: "0px 0px -10% 0px" });
+    }, { rootMargin: "0px 0px -8% 0px" });
     document.querySelectorAll(".reveal").forEach(function (el) {
       if (el.getBoundingClientRect().top > window.innerHeight) { el.classList.add("pending"); ro.observe(el); }
     });

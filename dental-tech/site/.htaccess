@@ -1,30 +1,31 @@
-# Apache: 301 redirects from the old site's URLs
+# 301 redirects from the old site's pages
 RewriteEngine On
+RewriteRule ^index\.html$ / [R=301,L,NE]
 RewriteRule ^Pages/index\.html$ / [R=301,L,NE]
-RewriteRule ^Pages/about\.html$ /about.html [R=301,L,NE]
-RewriteRule ^Pages/contact\.html$ /contact.html [R=301,L,NE]
-RewriteRule ^Pages/remoterepair\.html$ /contact.html#video [R=301,L,NE]
-RewriteRule ^Pages/parts\-equipment\-repair\.html$ /episkeves.html [R=301,L,NE]
-RewriteRule ^Pages/anakataskeyes\.html$ /episkeves.html#anakataskeues [R=301,L,NE]
-RewriteRule ^Pages/handpiece\-repair\.html$ /xeirolaves.html [R=301,L,NE]
-RewriteRule ^Pages/sterilizer\-repair\.html$ /autokaustoi.html [R=301,L,NE]
-RewriteRule ^Pages/DigiRadiography\.html$ /aktinografia.html [R=301,L,NE]
-RewriteRule ^Pages/dental\-equipment\.html$ /eksoplismos.html [R=301,L,NE]
-RewriteRule ^Pages/dental\-chairs\.html$ /eksoplismos.html#mixanimata [R=301,L,NE]
-RewriteRule ^Pages/lasers\.html$ /eksoplismos.html#laser [R=301,L,NE]
-RewriteRule ^Pages/arch_studies\.html$ /meletes.html [R=301,L,NE]
-RewriteRule ^Pages/meletes\.html$ /meletes.html [R=301,L,NE]
-RewriteRule ^Pages/DentalOfficeMove\.html$ /meletes.html#metafora [R=301,L,NE]
-RewriteRule ^Pages/Computerfix\.html$ /ypologistes.html [R=301,L,NE]
-RewriteRule ^Pages/Computerteach\.html$ /ypologistes.html#ekmathisi [R=301,L,NE]
-RewriteRule ^Pages/software\.html$ /ypologistes.html#logismiko [R=301,L,NE]
-RewriteRule ^Pages/aggelies\.html$ /aggelies.html [R=301,L,NE]
+RewriteRule ^Pages/about\.html$ /#giorgos [R=301,L,NE]
+RewriteRule ^Pages/contact\.html$ /#epikoinonia [R=301,L,NE]
+RewriteRule ^Pages/remoterepair\.html$ /#epikoinonia [R=301,L,NE]
+RewriteRule ^Pages/parts\-equipment\-repair\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/anakataskeyes\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/handpiece\-repair\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/sterilizer\-repair\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/DigiRadiography\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/dental\-equipment\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/dental\-chairs\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/lasers\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/arch_studies\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/meletes\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/DentalOfficeMove\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/Computerfix\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/Computerteach\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/software\.html$ /#ypiresies [R=301,L,NE]
+RewriteRule ^Pages/aggelies\.html$ / [R=301,L,NE]
 
 ErrorDocument 404 /404.html
 
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
   ExpiresByType text/css "access plus 1 month"
-  ExpiresByType application/javascript "access plus 1 month"
 </IfModule>

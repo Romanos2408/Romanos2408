@@ -1,233 +1,132 @@
 #!/usr/bin/env python3
-"""Builds the static site for dental-tech.gr.
+"""Builds dental-tech.gr: one page, src/index.html, into site/.
 
-Each file in src/pages/ starts with a header comment:
+In src/index.html:
+  {{photo:name|alt|class|fallback}}  inserts src/photos/name.(jpg|png|webp).
+      If the photo is missing and a fallback is given, a marble block
+      showing the fallback text is used instead.
+  {{icon:phone}} / {{icon:video}}  inline icons.
 
-    <!--
-    title: Page <title>
-    description: Meta description
-    nav: slug of the menu item to highlight
-    h1: Page heading (inner pages only)
-    lead: Sentence under the heading (inner pages only)
-    -->
-
-The rest of the file is the page body. Run `python3 build.py`; the finished
-site lands in site/ and can be uploaded as-is to any web host.
+Run `python3 build.py`, then upload the contents of site/.
+`pip install pillow` lets the build resize photos to fast WebP files.
 """
 import html
 import json
 import re
 import shutil
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent
 SRC = ROOT / "src"
-OUT = ROOT / "site"
+PHOTOS = SRC / "photos"
 
 DOMAIN = "https://www.dental-tech.gr"
-PHONE = "6944 648 748"
-PHONE_TEL = "+306944648748"
-EMAIL = "tech@dental-tech.gr"
-VIBER = "viber://chat?number=%2B306944648748"
+TITLE = "Υποστήριξη Οδοντιατρείου · Επισκευές οδοντιατρικών μηχανημάτων Ηράκλειο, 24/7"
+DESCRIPTION = ("Επισκευές και service σε όλα τα οδοντιατρικά μηχανήματα στο Ηράκλειο, 24/7. "
+               "Δωρεάν εκτίμηση, δανεικός εξοπλισμός, εγγύηση. Γιώργος Πατεράκης, 6944 648 748.")
 GOOGLE_VERIFICATION = "9U862btudvMgP9ZRfHiI7--urNMIV4rYU9bUqNHhfRM"
 
-NAV = [
-    ("episkeves", "Επισκευές & service"),
-    ("xeirolaves", "Χειρολαβές"),
-    ("autokaustoi", "Αυτόκαυστοι"),
-    ("aktinografia", "Ψηφιακή ακτινογραφία"),
-    ("eksoplismos", "Εξοπλισμός"),
-    ("meletes", "Μελέτη & μεταφορά"),
-    ("ypologistes", "Υπολογιστές"),
-    ("aggelies", "Αγγελίες"),
-    ("about", "Ποιοι είμαστε"),
-    ("contact", "Επικοινωνία"),
-]
-SERVICES = NAV[:7]
-# Shorter labels for the top menu so it fits on one line.
-SHORT = {"episkeves": "Επισκευές", "aktinografia": "Ακτινογραφία", "meletes": "Μελέτες"}
+ICONS = {
+    "phone": '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+    "video": '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3z"/></svg>',
+}
 
-ICON_PHONE = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>'
-ICON_VIDEO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3z"/></svg>'
+# Every page of the old site now lands on the matching part of the new one.
+REDIRECTS = {
+    "/index.html": "/",
+    "/Pages/index.html": "/",
+    "/Pages/about.html": "/#giorgos",
+    "/Pages/contact.html": "/#epikoinonia",
+    "/Pages/remoterepair.html": "/#epikoinonia",
+    "/Pages/parts-equipment-repair.html": "/#ypiresies",
+    "/Pages/anakataskeyes.html": "/#ypiresies",
+    "/Pages/handpiece-repair.html": "/#ypiresies",
+    "/Pages/sterilizer-repair.html": "/#ypiresies",
+    "/Pages/DigiRadiography.html": "/#ypiresies",
+    "/Pages/dental-equipment.html": "/#ypiresies",
+    "/Pages/dental-chairs.html": "/#ypiresies",
+    "/Pages/lasers.html": "/#ypiresies",
+    "/Pages/arch_studies.html": "/#ypiresies",
+    "/Pages/meletes.html": "/#ypiresies",
+    "/Pages/DentalOfficeMove.html": "/#ypiresies",
+    "/Pages/Computerfix.html": "/#ypiresies",
+    "/Pages/Computerteach.html": "/#ypiresies",
+    "/Pages/software.html": "/#ypiresies",
+    "/Pages/aggelies.html": "/",
+}
 
-
-def href(slug):
-    return "index.html" if slug == "index" else f"{slug}.html"
-
-
-def canonical(slug):
-    return f"{DOMAIN}/" if slug == "index" else f"{DOMAIN}/{slug}.html"
-
-
-def parse(path):
-    text = path.read_text(encoding="utf-8")
-    m = re.match(r"\s*<!--(.*?)-->\s*", text, re.S)
-    meta = {}
-    for line in m.group(1).strip().splitlines():
-        key, _, value = line.partition(":")
-        meta[key.strip()] = value.strip()
-    return meta, text[m.end():]
+OUT = ROOT / "site"
+_cache = {}
 
 
-def call_button(extra=""):
-    return (f'<a class="btn btn-call{extra}" href="tel:{PHONE_TEL}">{ICON_PHONE}'
-            f'<span>Κλήση <span class="num">{PHONE}</span></span></a>')
+def find_photo(name):
+    for ext in (".webp", ".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"):
+        if (PHOTOS / f"{name}{ext}").exists():
+            return PHOTOS / f"{name}{ext}"
+    return None
 
 
-def header(current):
-    items = "\n".join(
-        f'<li><a href="{href(s)}"{" aria-current=\"page\"" if s == current else ""}>{SHORT.get(s, label)}</a></li>'
-        for s, label in NAV
-    )
-    return f"""<a class="skip" href="#main">Μετάβαση στο περιεχόμενο</a>
-<header class="site-header">
-  <div class="wrap">
-    <div class="header-row">
-      <a class="brand" href="index.html" aria-label="Υποστήριξη Οδοντιατρείου, αρχική σελίδα">
-        <span class="brand-name">Υποστήριξη Οδοντιατρείου<b>.</b></span>
-        <span class="brand-sub">dental-tech.gr · Ηράκλειο Κρήτης</span>
-      </a>
-      <div class="header-actions">
-        {call_button()}
-        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Μενού</button>
-      </div>
-    </div>
-    <nav class="main-nav" id="main-nav" aria-label="Κύριο μενού">
-      <ul>
-{items}
-      </ul>
-    </nav>
-  </div>
-</header>"""
+def photo(name, alt, cls="", fallback=""):
+    src = find_photo(name)
+    if not src:
+        return f'<div class="{cls} empty" aria-hidden="true"><span>{fallback}</span></div>' if fallback else ""
+    if name not in _cache:
+        out = OUT / "assets" / "photos"
+        out.mkdir(parents=True, exist_ok=True)
+        try:
+            from PIL import Image, ImageOps
+            im = ImageOps.exif_transpose(Image.open(src))
+            keep_alpha = im.mode in ("RGBA", "LA", "P") and src.suffix.lower() == ".png"
+            im = im.convert("RGBA" if keep_alpha else "RGB")
+            variants = []
+            for w in (800, 1600):
+                ww = min(w, im.width)
+                if variants and ww == variants[-1][1]:
+                    break
+                hh = round(im.height * ww / im.width)
+                fn = f"{name}-{ww}.webp"
+                im.resize((ww, hh), Image.LANCZOS).save(out / fn, "WEBP", quality=82, method=6)
+                variants.append((fn, ww, hh))
+        except ImportError:
+            shutil.copy(src, out / src.name)
+            variants = [(src.name, None, None)]
+        _cache[name] = variants
+    v = _cache[name]
+    fn, w, h = v[-1]
+    attrs = f'src="assets/photos/{fn}" alt="{html.escape(alt)}"'
+    if w:
+        attrs += f' srcset="{", ".join(f"assets/photos/{f} {vw}w" for f, vw, _ in v)}" sizes="(max-width: 900px) 100vw, 50vw" width="{w}" height="{h}"'
+    attrs += ' loading="eager" fetchpriority="high"' if name == "hero" else ' loading="lazy" decoding="async"'
+    img = f"<img {attrs}>"
+    return f'<div class="{cls}">{img}</div>' if cls else img
 
 
-def footer():
-    services = "\n".join(f'<li><a href="{href(s)}">{label}</a></li>' for s, label in SERVICES)
-    return f"""<footer class="site-footer">
-  <div class="wrap">
-    <div class="footer-grid">
-      <div class="stack">
-        <h2>Υποστήριξη Οδοντιατρείου</h2>
-        <p>Τεχνική υποστήριξη για οδοντιάτρους στο Ηράκλειο και σε όλη την Κρήτη: επισκευές, service, εξοπλισμός, ψηφιακή ακτινογραφία και υπολογιστές.</p>
-        <p><a href="tel:{PHONE_TEL}" class="mono">{PHONE}</a><br><a href="mailto:{EMAIL}" class="mono">{EMAIL}</a></p>
-      </div>
-      <div>
-        <h2>Υπηρεσίες</h2>
-        <ul>
-{services}
-        </ul>
-      </div>
-      <div>
-        <h2>Ακόμα</h2>
-        <ul>
-          <li><a href="aggelies.html">Αγγελίες μεταχειρισμένων</a></li>
-          <li><a href="about.html">Ποιοι είμαστε</a></li>
-          <li><a href="contact.html#video">Βοήθεια με βιντεοκλήση</a></li>
-          <li><a href="contact.html">Επικοινωνία</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-legal">
-      <span>© <span id="year">2026</span> Υποστήριξη Οδοντιατρείου · Γιώργος Πατεράκης</span>
-      <span>Οι τιμές δεν περιλαμβάνουν ΦΠΑ, εκτός αν αναφέρεται διαφορετικά.</span>
-    </div>
-  </div>
-</footer>
-<div class="callbar">
-  {call_button()}
-  <a class="btn btn-ghost" href="{VIBER}" aria-label="Βιντεοκλήση Viber">{ICON_VIDEO}<span>Viber</span></a>
-</div>"""
+def expand(body):
+    def ph(m):
+        p = m.group(1).split("|") + ["", "", ""]
+        return photo(p[0], p[1], p[2], p[3])
+    body = re.sub(r"\{\{photo:([^}]*)\}\}", ph, body)
+    return re.sub(r"\{\{icon:(\w+)\}\}", lambda m: ICONS[m.group(1)], body)
 
 
-def aside(current):
-    links = "\n".join(
-        f'<li><a href="{href(s)}"{" aria-current=\"page\"" if s == current else ""}>{label}</a></li>'
-        for s, label in SERVICES
-    )
-    return f"""<aside class="aside" aria-label="Επικοινωνία και υπηρεσίες">
-  <div class="aside-card">
-    <span class="eyebrow">Χρειάζεστε βοήθεια τώρα;</span>
-    <span class="phone">{PHONE}</span>
-    <p>Το τηλέφωνο είναι ο πιο γρήγορος τρόπος. Καλέστε οποτεδήποτε, δεν ενοχλείτε.</p>
-    {call_button()}
-    <a class="btn btn-ghost" href="contact.html#video">{ICON_VIDEO}<span>Βοήθεια με βιντεοκλήση</span></a>
-  </div>
-  <div>
-    <span class="eyebrow">Υπηρεσίες</span>
-    <ul class="aside-nav">
-{links}
-    </ul>
-  </div>
-</aside>"""
-
-
-def json_ld():
-    data = {
-        "@context": "https://schema.org",
-        "@type": "ProfessionalService",
-        "name": "Υποστήριξη Οδοντιατρείου",
-        "alternateName": "dental-tech.gr",
-        "description": "Επισκευή και service οδοντιατρικών μηχανημάτων, χειρολαβών, αυτόκαυστων κλιβάνων και ψηφιακής ακτινογραφίας στο Ηράκλειο Κρήτης.",
-        "url": f"{DOMAIN}/",
-        "telephone": PHONE_TEL,
-        "email": EMAIL,
-        "founder": {"@type": "Person", "name": "Γιώργος Πατεράκης"},
-        "areaServed": [{"@type": "City", "name": "Ηράκλειο"}, {"@type": "AdministrativeArea", "name": "Κρήτη"}],
-        "address": {"@type": "PostalAddress", "addressLocality": "Ηράκλειο", "addressRegion": "Κρήτη", "addressCountry": "GR"},
-        "knowsLanguage": "el",
-    }
-    return f'<script type="application/ld+json">{json.dumps(data, ensure_ascii=False)}</script>'
-
-
-def head(meta, slug):
-    title = html.escape(meta["title"])
-    desc = html.escape(meta["description"])
-    extra = ""
-    if slug == "index":
-        extra = f'\n<meta name="google-site-verification" content="{GOOGLE_VERIFICATION}">\n{json_ld()}'
-    return f"""<title>{title}</title>
-<meta name="description" content="{desc}">
-<link rel="canonical" href="{canonical(slug)}">
+def head(title, description, canonical, extra=""):
+    return f"""<title>{html.escape(title)}</title>
+<meta name="description" content="{html.escape(description)}">
+<link rel="canonical" href="{canonical}">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="el_GR">
-<meta property="og:site_name" content="Υποστήριξη Οδοντιατρείου">
-<meta property="og:title" content="{title}">
-<meta property="og:description" content="{desc}">
-<meta property="og:url" content="{canonical(slug)}">
-<meta name="theme-color" content="#12222b">
+<meta property="og:title" content="{html.escape(title)}">
+<meta property="og:description" content="{html.escape(description)}">
+<meta property="og:url" content="{canonical}">
+<meta name="theme-color" content="#f6f5f1">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="assets/fonts/commissioner-greek-full-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/noto-serif-display-greek-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/style.css">{extra}"""
 
 
-def render(meta, body, slug, wrap_document=True):
-    if slug == "index" or meta.get("layout") == "bare":
-        main = body
-    else:
-        crumbs = (f'<nav class="crumbs" aria-label="Διαδρομή"><a href="index.html">Αρχική</a> / '
-                  f'{html.escape(meta["h1"])}</nav>')
-        lead = f'<p class="lead">{meta["lead"]}</p>' if meta.get("lead") else ""
-        main = f"""<div class="page-hero">
-  <div class="wrap">
-    {crumbs}
-    <h1>{meta["h1"]}</h1>
-    {lead}
-  </div>
-</div>
-<div class="wrap page-body">
-  <article class="prose">
-{body}
-  </article>
-  {aside(slug)}
-</div>"""
-    inner = f"""{head(meta, slug)}
-{header(meta.get("nav", slug))}
-<main id="main">
-{main}
-</main>
-{footer()}
-<script src="assets/site.js" defer></script>"""
-    if not wrap_document:
+def document(inner, wrap):
+    if not wrap:
         return inner + "\n"
     return f"""<!doctype html>
 <html lang="el">
@@ -242,77 +141,75 @@ def render(meta, body, slug, wrap_document=True):
 """
 
 
-# Old URL -> new URL, so Google rankings and old bookmarks carry over.
-REDIRECTS = {
-    "/Pages/index.html": "/",
-    "/Pages/about.html": "/about.html",
-    "/Pages/contact.html": "/contact.html",
-    "/Pages/remoterepair.html": "/contact.html#video",
-    "/Pages/parts-equipment-repair.html": "/episkeves.html",
-    "/Pages/anakataskeyes.html": "/episkeves.html#anakataskeues",
-    "/Pages/handpiece-repair.html": "/xeirolaves.html",
-    "/Pages/sterilizer-repair.html": "/autokaustoi.html",
-    "/Pages/DigiRadiography.html": "/aktinografia.html",
-    "/Pages/dental-equipment.html": "/eksoplismos.html",
-    "/Pages/dental-chairs.html": "/eksoplismos.html#mixanimata",
-    "/Pages/lasers.html": "/eksoplismos.html#laser",
-    "/Pages/arch_studies.html": "/meletes.html",
-    "/Pages/meletes.html": "/meletes.html",
-    "/Pages/DentalOfficeMove.html": "/meletes.html#metafora",
-    "/Pages/Computerfix.html": "/ypologistes.html",
-    "/Pages/Computerteach.html": "/ypologistes.html#ekmathisi",
-    "/Pages/software.html": "/ypologistes.html#logismiko",
-    "/Pages/aggelies.html": "/aggelies.html",
-}
+def business_ld():
+    return {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "Υποστήριξη Οδοντιατρείου",
+        "alternateName": "dental-tech.gr",
+        "description": DESCRIPTION,
+        "url": f"{DOMAIN}/",
+        "telephone": "+306944648748",
+        "email": "tech@dental-tech.gr",
+        "founder": {"@type": "Person", "name": "Γιώργος Πατεράκης"},
+        "areaServed": [{"@type": "City", "name": "Ηράκλειο"}, {"@type": "AdministrativeArea", "name": "Κρήτη"}],
+        "address": {"@type": "PostalAddress", "addressLocality": "Ηράκλειο", "addressRegion": "Κρήτη", "addressCountry": "GR"},
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            "opens": "00:00", "closes": "23:59",
+        },
+    }
 
 
-def write_redirects():
-    lines = ["# Apache: 301 redirects from the old site's URLs", "RewriteEngine On"]
-    for old, new in REDIRECTS.items():
-        target, _, frag = new.partition("#")
-        lines.append(f"RewriteRule ^{re.escape(old.lstrip('/'))}$ {target}{'#' + frag if frag else ''} [R=301,L,NE]")
-    lines += ["", "ErrorDocument 404 /404.html", "",
-              "<IfModule mod_expires.c>", "  ExpiresActive On",
-              '  ExpiresByType font/woff2 "access plus 1 year"',
-              '  ExpiresByType text/css "access plus 1 month"',
-              '  ExpiresByType application/javascript "access plus 1 month"',
-              "</IfModule>", ""]
-    (OUT / ".htaccess").write_text("\n".join(lines), encoding="utf-8")
-    # Netlify / Cloudflare Pages format
-    (OUT / "_redirects").write_text(
-        "\n".join(f"{old} {new} 301" for old, new in REDIRECTS.items()) + "\n", encoding="utf-8")
-
-
-def write_sitemap(slugs):
-    urls = "\n".join(f"  <url><loc>{canonical(s)}</loc></url>" for s in slugs if s != "404")
-    (OUT / "sitemap.xml").write_text(
-        f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}\n</urlset>\n',
-        encoding="utf-8")
-    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {DOMAIN}/sitemap.xml\n", encoding="utf-8")
-
-
-def build(out=OUT, preview=False):
+def build(out, preview=False):
+    global OUT
+    OUT = out
+    _cache.clear()
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(SRC / "assets", out / "assets")
-    slugs = []
-    for path in sorted((SRC / "pages").glob("*.html")):
-        slug = path.stem
-        meta, body = parse(path)
-        # In preview mode the homepage is published without its document
-        # wrapper, because the preview host adds one.
-        doc = render(meta, body, slug, wrap_document=not (preview and slug == "index"))
-        (out / f"{slug}.html").write_text(doc, encoding="utf-8")
-        slugs.append(slug)
-    return slugs
+
+    body = expand((SRC / "index.html").read_text(encoding="utf-8"))
+    extra = (f'\n<meta name="google-site-verification" content="{GOOGLE_VERIFICATION}">'
+             f'\n<script type="application/ld+json">{json.dumps(business_ld(), ensure_ascii=False)}</script>')
+    if find_photo("hero"):
+        extra += f'\n<meta property="og:image" content="{DOMAIN}/assets/photos/{_cache["hero"][-1][0]}">'
+    page = f'{head(TITLE, DESCRIPTION, DOMAIN + "/", extra)}\n{body}\n<script src="assets/site.js" defer></script>'
+    (out / "index.html").write_text(document(page, wrap=not preview), encoding="utf-8")
+
+    notfound = f"""{head("Η σελίδα δεν βρέθηκε · Υποστήριξη Οδοντιατρείου", "Η σελίδα δεν υπάρχει.", DOMAIN + "/404.html")}
+<main class="marble" style="min-height:100vh;display:grid;place-items:center;text-align:center;padding:2rem">
+  <div style="display:grid;gap:1.2rem;justify-items:center">
+    <span class="label">404</span>
+    <h1>Αυτή η σελίδα <em>δεν υπάρχει.</em></h1>
+    <a class="btn btn-dark" href="index.html">Στην αρχική</a>
+  </div>
+</main>"""
+    (out / "404.html").write_text(document(notfound, wrap=True), encoding="utf-8")
+
+    if not preview:
+        lines = ["# 301 redirects from the old site's pages", "RewriteEngine On"]
+        for old, new in REDIRECTS.items():
+            target, _, frag = new.partition("#")
+            lines.append(f"RewriteRule ^{re.escape(old.lstrip('/'))}$ {target}{'#' + frag if frag else ''} [R=301,L,NE]")
+        lines += ["", "ErrorDocument 404 /404.html", "",
+                  "<IfModule mod_expires.c>", "  ExpiresActive On",
+                  '  ExpiresByType font/woff2 "access plus 1 year"',
+                  '  ExpiresByType image/webp "access plus 1 year"',
+                  '  ExpiresByType text/css "access plus 1 month"',
+                  "</IfModule>", ""]
+        (out / ".htaccess").write_text("\n".join(lines), encoding="utf-8")
+        (out / "_redirects").write_text("\n".join(f"{o} {n} 301" for o, n in REDIRECTS.items()) + "\n", encoding="utf-8")
+        (out / "sitemap.xml").write_text(
+            f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>{DOMAIN}/</loc></url>\n</urlset>\n',
+            encoding="utf-8")
+        (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {DOMAIN}/sitemap.xml\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
-    import sys
     if len(sys.argv) > 2 and sys.argv[1] == "--preview":
         build(Path(sys.argv[2]), preview=True)
     else:
-        slugs = build()
-        write_redirects()
-        write_sitemap(slugs)
-        print(f"Built {len(slugs)} pages into {OUT}")
+        build(ROOT / "site")
+        print(f"Built into {ROOT / 'site'}")

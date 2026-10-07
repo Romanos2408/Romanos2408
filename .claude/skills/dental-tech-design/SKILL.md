@@ -24,6 +24,8 @@ The live values are in `dental-tech/src/assets/style.css`:
 
 Don't add a second accent colour. Calm comes from restraint.
 
+**The colour isn't final.** Giorgos chooses it. Six palettes exist as `[data-palette]` blocks in `style.css`: green (the default), blue, navy, charcoal, teal and violet, each with a dark-mode version. Preview builds (`--preview`, `--pages`) show a colour switcher at the bottom left, and `#blue`, `#navy` and so on in the URL pre-select one. The production colour is `PALETTE` in `build.py`. When he picks, set it there and drop the other palettes if you like. Anything new must use the tokens (`--brand`, `--brand-deep`, `--logo`, `--mint`…) so every palette keeps working.
+
 ## Type
 
 Manrope only (it has Greek), self-hosted from `@fontsource-variable/manrope`. Headings are 750 weight with tight letter-spacing (-0.025em); body text is 400 at about 17px.

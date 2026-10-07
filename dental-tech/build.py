@@ -30,7 +30,7 @@ GOOGLE_VERIFICATION = "9U862btudvMgP9ZRfHiI7--urNMIV4rYU9bUqNHhfRM"
 ICONS = {
     "phone": '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
     "video": '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3z"/></svg>',
-    "logo": '<svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#0d6b56"/><path d="M20 10.5c-2.1 0-3 .9-4.6.9s-2.6-1-4.3.2c-1.9 1.4-1.9 4.6-1 7.4.8 2.6 1.4 7.6 3.2 8.6 1.6.9 1.9-3.6 3-5.2.7-1 1.5-1.4 3.7-1.4s3 .4 3.7 1.4c1.1 1.6 1.4 6.1 3 5.2 1.8-1 2.4-6 3.2-8.6.9-2.8.9-6-1-7.4-1.7-1.2-2.7-.2-4.3-.2s-2.5-.9-4.6-.9z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><circle cx="31" cy="9" r="3.2" fill="#7fe0bf"/></svg>',
+    "logo": '<svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" style="fill:var(--logo,#0d6b56)"/><path d="M20 10.5c-2.1 0-3 .9-4.6.9s-2.6-1-4.3.2c-1.9 1.4-1.9 4.6-1 7.4.8 2.6 1.4 7.6 3.2 8.6 1.6.9 1.9-3.6 3-5.2.7-1 1.5-1.4 3.7-1.4s3 .4 3.7 1.4c1.1 1.6 1.4 6.1 3 5.2 1.8-1 2.4-6 3.2-8.6.9-2.8.9-6-1-7.4-1.7-1.2-2.7-.2-4.3-.2s-2.5-.9-4.6-.9z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><circle cx="31" cy="9" r="3.2" style="fill:var(--logo-dot,#7fe0bf)"/></svg>',
     "clock": '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
     "search": '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/><path d="M8.5 11h5M11 8.5v5"/></svg>',
     "shield": '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg>',
@@ -173,33 +173,79 @@ def business_ld():
     }
 
 
-def build(out, preview=False):
+# The colour the real site ships with. Options: green, blue, navy, charcoal, teal, violet.
+PALETTE = "green"
+PALETTES = [("green", "Πράσινο", "#0d6b56"), ("blue", "Μπλε", "#1f5fd1"), ("navy", "Navy", "#1b2f5e"),
+            ("charcoal", "Ανθρακί", "#2b2e33"), ("teal", "Πετρόλ", "#0b6b7a"), ("violet", "Μωβ", "#5a3fb3")]
+
+SWITCHER_HTML = """
+<div class="swatches" role="group" aria-label="Δοκιμή χρώματος">
+  <span class="name" id="pal-name">Χρώμα</span>
+  {buttons}
+</div>
+<script>
+(function () {{
+  var root = document.documentElement, name = document.getElementById("pal-name");
+  var btns = document.querySelectorAll(".swatches button");
+  function apply(p) {{
+    if (p === "green") root.removeAttribute("data-palette"); else root.setAttribute("data-palette", p);
+    btns.forEach(function (b) {{ var on = b.dataset.p === p; b.setAttribute("aria-pressed", on); if (on) name.textContent = b.title; }});
+    try {{ localStorage.setItem("palette", p); }} catch (e) {{}}
+  }}
+  btns.forEach(function (b) {{ b.addEventListener("click", function () {{ apply(b.dataset.p); }}); }});
+  var start = "green", h = location.hash.slice(1);
+  try {{ start = localStorage.getItem("palette") || start; }} catch (e) {{}}
+  btns.forEach(function (b) {{ if (b.dataset.p === h) start = h; }});
+  apply(start);
+}})();
+</script>"""
+
+
+def switcher():
+    buttons = "".join(f'<button type="button" data-p="{k}" title="{label}" aria-label="{label}" style="--c:{c}"></button>'
+                      for k, label, c in PALETTES)
+    return SWITCHER_HTML.format(buttons=buttons)
+
+
+def build(out, preview=False, pages=False):
+    """preview: artifact copy (no document wrapper). pages: shareable GitHub Pages copy.
+    Both get the colour switcher and are hidden from search engines."""
     global OUT
     OUT = out
     _cache.clear()
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(SRC / "assets", out / "assets")
+    trial = preview or pages
 
     body = expand((SRC / "index.html").read_text(encoding="utf-8"))
     extra = (f'\n<meta name="google-site-verification" content="{GOOGLE_VERIFICATION}">'
              f'\n<script type="application/ld+json">{json.dumps(business_ld(), ensure_ascii=False)}</script>')
     if find_photo("hero"):
         extra += f'\n<meta property="og:image" content="{DOMAIN}/assets/photos/{_cache["hero"][-1][0]}">'
+    if trial:
+        extra = '\n<meta name="robots" content="noindex">'
+    elif PALETTE != "green":
+        extra += f'\n<script>document.documentElement.setAttribute("data-palette", "{PALETTE}")</script>'
     page = f'{head(TITLE, DESCRIPTION, DOMAIN + "/", extra)}\n{body}\n<script src="assets/site.js" defer></script>'
+    if trial:
+        page += switcher()
     (out / "index.html").write_text(document(page, wrap=not preview), encoding="utf-8")
 
     notfound = f"""{head("Η σελίδα δεν βρέθηκε · Υποστήριξη Οδοντιατρείου", "Η σελίδα δεν υπάρχει.", DOMAIN + "/404.html")}
-<main class="marble" style="min-height:100vh;display:grid;place-items:center;text-align:center;padding:2rem">
+<main style="min-height:100vh;display:grid;place-items:center;text-align:center;padding:2rem">
   <div style="display:grid;gap:1.2rem;justify-items:center">
-    <span class="label">404</span>
-    <h1>Αυτή η σελίδα <em>δεν υπάρχει.</em></h1>
-    <a class="btn btn-dark" href="index.html">Στην αρχική</a>
+    <span class="kicker">404</span>
+    <h1>Αυτή η σελίδα δεν υπάρχει.</h1>
+    <a class="btn btn-brand" href="index.html">Στην αρχική</a>
   </div>
 </main>"""
     (out / "404.html").write_text(document(notfound, wrap=True), encoding="utf-8")
 
-    if not preview:
+    if pages:
+        (out / ".nojekyll").write_text("", encoding="utf-8")
+        (out / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
+    if not trial:
         lines = ["# 301 redirects from the old site's pages", "RewriteEngine On"]
         for old, new in REDIRECTS.items():
             target, _, frag = new.partition("#")
@@ -221,6 +267,8 @@ def build(out, preview=False):
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "--preview":
         build(Path(sys.argv[2]), preview=True)
+    elif len(sys.argv) > 2 and sys.argv[1] == "--pages":
+        build(Path(sys.argv[2]), pages=True)
     else:
         build(ROOT / "site")
         print(f"Built into {ROOT / 'site'}")
